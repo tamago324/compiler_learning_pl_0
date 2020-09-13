@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "getSource.h"
+#include "compile.h"
 
 int main(int argc, char const* argv[])
 {
@@ -9,6 +10,9 @@ int main(int argc, char const* argv[])
     scanf_s("%s", fileName);
     if (!openSource(fileName)) {
         return -1;
+    }
+    if (compile(fileName)) {
+        /* execute(); */
     }
     closeSource();
     return 0;
