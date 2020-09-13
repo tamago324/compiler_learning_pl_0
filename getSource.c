@@ -20,10 +20,127 @@ static int lineIndex;
 // 最後に読んだ文字
 static char ch;
 
+// 最後に読んだトークン
+static Token cToken;
+
+/* static KindT idKind; */
+
+// そのトークンの前のスペースの個数
+static int spaces;
+// その前の CR の個数
+static int CR;
+// トークンを印字したか？
+static int printed;
+
 // エラーの数
 static int errorCnt;
 
 static char nextChar();
+static void printSpaces();
+static void printcToken();
+
+/* キーワード表でのエントリ */
+struct keyWd {
+    // 原始プログラム内の文字列
+    //   (構文解析器にとってはどうでもいい)
+    char *lexeme;
+    // トークン名 や キーワードの種類
+    //   (文法での終端記号を意味する)
+    KeyId keyId;
+};
+
+/*
+    キーワード表
+        識別子と予約語 を見分けるために使用する
+        原始プログラム上のつづり と トークン名の対応表
+*/
+static struct keyWd KeyWdTbl[] = {
+    {"begin", Begin},
+    {"end", End},
+    {"if", If},
+    {"then", Then},
+    {"while", While},
+    {"do", Do},
+    {"return", Ret},
+    {"function", Func},
+    {"var", Var},
+    {"const", Const},
+    {"odd", Odd},
+    {"write", Write},
+    {"writeln", WriteLn},
+    {"$dummy1", end_of_KeyWd},
+
+    {"+", Plus},
+    {"-", Minus},
+    {"*", Mult},
+    {"/", Div},
+    {"(", Lparen},
+    {")", Rparen},
+    {"=", Equal},
+    {"<", Lss},
+    {">", Gtr},
+    {"<>", NotEq},
+    {"<=", LssEq},
+    {">=", GtrEq},
+    {",", Comma},
+    {".", Period},
+    {";", Semicolon},
+    {":=", Assign},
+    {"$dummy2", end_of_KeySym},
+};
+
+/*
+    キーk は予約語か？
+*/
+int isKeyWd(KeyId k) { return (k < end_of_KeyWd); }
+
+/*
+    キーk は記号か？
+*/
+int isKeySym(KeyId k) { return (end_of_KeyWd < k & k < end_of_KeySym); }
+
+// 文字の種類を表す表
+// TODO: なんのチェックに使っているのか
+static KeyId charClassTbl[256];
+
+// 文字の種類を表す表の初期化
+static void initCharClassTbl() {
+
+    // 初期化
+    for (int i = 0; i < 256; i++) {
+        charClassTbl[i] = others;
+    }
+    for (int i = '0'; i < '9'; i++) {
+        charClassTbl[i] = digit;
+    }
+    for (int i = 'A'; i < 'Z'; i++) {
+        charClassTbl[i] = letter;
+    }
+    for (int i = 'a'; i < 'z'; i++) {
+        charClassTbl[i] = letter;
+    }
+
+    // 記号
+    charClassTbl['+'] = Plus;
+    charClassTbl['-'] = Minus;
+    charClassTbl['*'] = Mult;
+    charClassTbl['/'] = Div;
+    charClassTbl['('] = Lparen;
+    charClassTbl[')'] = Rparen;
+    charClassTbl['='] = Equal;
+    charClassTbl['<'] = Lss;
+    charClassTbl['>'] = Gtr;
+    charClassTbl[','] = Comma;
+    charClassTbl['.'] = Period;
+    charClassTbl[';'] = Semicolon;
+    charClassTbl[':'] = colon;
+
+    // 以下の記号については、字句解析中に記号表に入れる
+    /* '<>' (NotEq) */
+    /* '<=' (LssEq) */
+    /* '>=' (GtrEq) */
+    /* ':=' (Assign) */
+}
 
 /*
     ファイルを開く
