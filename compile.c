@@ -2,15 +2,16 @@
 #include <stdio.h>
 
 int compile() {
-    char c;
+    Token token;
 
     printf("start compilation\n");
 
     initSource();
     while (1) {
-        c = nextChar();
-        printf("%c", c);
+        /* token 読み出して、出力もする */
+        token = nextToken();
     }
+    finalSource();
 
     return 1;
 }
