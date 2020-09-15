@@ -72,17 +72,28 @@ typedef struct {
     } u;
 } Token;
 
-void getTokenName(Token tok, char* name);
-
 int openSource(char fileName[]); /* ファイルを開く */
 void closeSource();              /* ファイルを閉じる */
 void initSource();               /* 初期化 */
 void finalSource();              /* 終わりの処理 */
 
-char nextChar();   /* 次のトークンを読み出し、返す */
 Token nextToken(); /* 次のトークンを読み出し、返す */
+Token checkGet(Token t, KeyId k); /* t.kind == k のチェック */
+/*
+    t.kind == k の場合、
+        次のトークンを読んで返す
+    t.kind != k の場合、
+        エラーメッセージを出力し、
+        t と k の両方が記号 or 予約語の場合、
+            t を捨て、次のトークンを読んで返す
+            (t を k で置き換えたことにする (誤り訂正？))
+    それ以外の場合、
+        k を挿入したことにして、t を返す
+*/
 
 void errorNoCheck(); /* エラーのお数をカウント、多すぎたら終わり */
 void errorF(char *m); /* エラーメッセージを出力し、コンパイル終了 */
 void errorMessage(char *m); /* エラーメッセージを出力 */
-void errorInsert(KeyId k);  // 文字が足りないから、tex ファイルに挿入
+void errorType(char *m);    /* 型エラーのメッセージを出力 */
+void errorInsert(KeyId k); /* 文字が足りないから、tex ファイルに挿入 */
+void errorMissingId(); /* 識別子を置くはずのところにないですよー！って示す */

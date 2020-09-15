@@ -251,7 +251,8 @@ void finalSource() {
 }
 
 void errorInsert(KeyId k) {
-    fprintf(fptex, "<span class=\"insert\"><b>%s</b></span>", KeyWdTbl[k].lexeme);
+    fprintf(fptex, "<span class=\"insert\"><b>%s</b></span>",
+            KeyWdTbl[k].lexeme);
 }
 
 /*
@@ -262,6 +263,46 @@ void errorCntCheck() {
         fprintf_s(fptex, "too many errors\n</pre>\n</body>\n<html>\n");
         printf("abort compilation");
         exit(1);
+    }
+}
+
+/*
+    型エラー を印字
+*/
+void errorType(char *m) {
+    printSpaces();
+    fprintf(fptex, "<span class=\"type\">%s</span>", m);
+    printcToken();
+    errorCntCheck();
+}
+
+/*
+    識別子が間違えていますよー！！
+*/
+void errorMissingId() {
+    fprintf(fptex, "<span class=\"insert\">Id</span>");
+    errorCntCheck();
+}
+
+void errorDelete() {
+    int i = (int)cToken.kind;
+
+    printSpaces();
+    printed = 1;
+
+    if (i < end_of_KeyWd) {
+        /* 予約語 */
+        fprintf(fptex, "<span class=\"delete\"><b>%s</b></span>",
+                KeyWdTbl[i].lexeme);
+    } else if (i < end_of_KeySym) {
+        /* 演算子 or 区切り文字 */
+        fprintf(fptex, "<span class=\"delete\">%s</span>", KeyWdTbl[i].lexeme);
+    } else if (i < (int)Id) {
+        /* 識別子 */
+        fprintf(fptex, "<span class=\"delete\">%s</span>", cToken.u.id);
+    } else if (i < (int)Num) {
+        /* 数値 */
+        fprintf(fptex, "<span class=\"delete\">%d</span>", cToken.u.value);
     }
 }
 
@@ -424,6 +465,37 @@ Token nextToken() {
     printed = 0;
 
     return tok;
+}
+
+/* t.kind == k のチェック */
+Token checkGet(Token t, KeyId k) {
+    /*
+        t.kind == k の場合、
+            次のトークンを読んで返す
+        t.kind != k の場合、
+            エラーメッセージを出力し、
+            t と k の両方が記号 or 両方が予約語の場合、
+                t を捨て、次のトークンを読んで返す
+                (t を k で置き換えたことにする (誤り訂正？))
+        それ以外の場合、
+            k を挿入したことにして、t を返す
+    */
+
+    if (t.kind == k) {
+        // 合っているため、次を読み出す
+        return nextToken();
+    }
+
+    if ((isKeyWd(k) && isKeyWd(t.kind)) || (isKeySym(k) && isKeySym(t.kind))) {
+        // 間違えたのかな？ってことで置き換える
+        errorDelete();
+        errorInsert(k);
+        return nextToken();
+    }
+
+    // ぜんぜん違うから、正しいと思われるものを insert して、そのまま返す
+    errorInsert(k);
+    return t;
 }
 
 /*
