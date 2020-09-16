@@ -97,3 +97,5 @@ void errorMessage(char *m); /* エラーメッセージを出力 */
 void errorType(char *m);    /* 型エラーのメッセージを出力 */
 void errorInsert(KeyId k); /* 文字が足りないから、tex ファイルに挿入 */
 void errorMissingId(); /* 識別子を置くはずのところにないですよー！って示す */
+void errorDelete(); /* 今読んだトークンを読み捨てる */
+int errorN();       /* エラーの個数を返す */

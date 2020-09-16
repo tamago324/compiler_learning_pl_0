@@ -13,11 +13,14 @@
 // タブのスペース数
 #define TAB 5
 // 挿入文字の色
-#define INSERT_C "#0000FF"
+#define INSERT_C "#82b1ff"
 // 削除文字の色
-#define DELETE_C "#FF0000"
+#define DELETE_C "#BE5046"
 // タイプエラーの色
-#define TYPE_C "#00FF00"
+#define TYPE_C "#C3E88D"
+
+#define COLOR_FG "#bfc7d5"
+#define COLOR_BG "#292D3E"
 
 // ソースファイル
 static FILE *fpi;
@@ -227,7 +230,8 @@ void initSource() {
     fprintf(fptex, "<head>");
     fprintf(fptex, "<meta charset=\"utf-8\">\n");
     fprintf(fptex, "<style type=\"text/css\">\n");
-    fprintf(fptex, "body {backgroundcolor: \"#dddddd\"}\n");
+    fprintf(fptex, "body {background: %s; color: %s}\n", COLOR_BG,
+            COLOR_FG);
     fprintf(fptex, ".insert {color: %s}\n", INSERT_C);
     fprintf(fptex, ".delete {color: %s}\n", DELETE_C);
     fprintf(fptex, ".type {color: %s}\n", TYPE_C);
@@ -573,3 +577,8 @@ void printcToken() {
         printf("<Num, %d>\n", cToken.u.value);
     }
 }
+
+/*
+    エラーの個数を返す
+*/
+int errorN() { return errorCnt; }

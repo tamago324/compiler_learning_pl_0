@@ -1,0 +1,22 @@
+// refer https://code.visualstudio.com/docs/cpp/launch-json-reference
+{
+  // debugger settings
+  "configurations": {
+
+    "run with args - $current.c": {
+      "adapter": "vscode-cpptools",
+      "configuration": {
+        "request": "launch",
+        "type": "cppdbg ",
+        "program": "${workspaceRoot}\\main.exe",
+        // main method stop?
+        "stopAtEntry": "true",
+        "cwd": "${cwd}",
+        "args#json": "${args:[]}",
+        "MIMode": "gdb",
+        "MIDebuggerPath": "C:/msys64/mingw64/bin/gdb.exe"
+      }
+    }
+  }
+
+}

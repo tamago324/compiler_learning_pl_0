@@ -1,36 +1,43 @@
 #include "getSource.h"
 #include <stdio.h>
 
-// ブロック
-static void block();
-// 定数宣言
-static void constDecl();
-// 変数宣言
-static void varDecl();
-// 関数宣言
-static void funcDecl();
-// 文
-static void statement();
-// 条件
-static void condition();
-// 式
-static void expression();
-// 式の項
-static void term();
-// 式の因子
-static void factor();
+/* このエラー数以下なら、OK */
+#define MINERROR 3
+
+static void block();      // ブロック
+static void constDecl();  // 定数宣言
+static void varDecl();    // 変数宣言
+static void funcDecl();   // 関数宣言
+static void statement();  // 文
+static void condition();  // 条件
+static void expression(); // 式
+static void term();       // 式の項
+static void factor();     // 式の因子
+
+// トークンt が statement の先頭のトークンか？
+static int isStBeginKey(Token t);
 
 // 次のトークン
 Token token;
 
 int compile() {
+    int errN;
+
     printf("start compilation\n");
 
     initSource();
-    /* token 読み出して、出力もする */
+    // 最初の token 読み出し
     token = nextToken();
     block();
     finalSource();
+
+    // エラー数の取得
+    errN = errorN();
+    if (errN != 0) {
+        printf("%d errors\n", errN);
+    }
+    // 最大エラー数よりも少ないか？
+    return errN < MINERROR;
 
     return 1;
 }
@@ -42,7 +49,6 @@ void block() {
 
         case Const:
             /* constDecl */
-
             // トークンを読み出しておく
             token = nextToken();
             constDecl();
@@ -67,8 +73,11 @@ void block() {
     statement();
 }
 
+/*
+   定数宣言
+   constDecl -> const { ident = number // , } ;
+*/
 void constDecl() {
-    /* constDecl -> const { ident = number // , } ; */
 
     /* block の部分で、 const は認識しているため、ここではチェックしない*/
 
@@ -86,23 +95,35 @@ void constDecl() {
                 // 型エラー
                 errorType("number");
             }
+            token = nextToken();
         } else {
             // 仮の識別子を入れる
             errorMissingId();
         }
 
         if (token.kind != Comma) {
-            break;
+            if (token.kind == Id) {
+                // Id Id となっていたら、, の入れ忘れだと思うから、入れてあげる
+                errorInsert(Comma);
+                continue;
+            } else {
+                break;
+            }
         }
 
         token = nextToken();
     }
 
-    // ;
+    // ; のはず
     token = checkGet(token, Semicolon);
 }
 
+/*
+   変数宣言
+    varDecl -> var { ident // , } ;
+*/
 void varDecl() {
+
     while (1) {
         if (token.kind == Id) {
             // TODO: 識別子を記号表に登録
@@ -122,10 +143,16 @@ void varDecl() {
     token = checkGet(token, Semicolon);
 }
 
+/*
+   関数宣言
+   funcDecl -> function ident ( (ident | e) { ident // , } ) block ;
+*/
 void funcDecl() {
-    /* funcDecl -> ident ( (ident | e) { ident // , } ) block ; */
 
-    if (token.kind == Id) {
+    if (token.kind != Id) {
+        // 関数名が来るはずだから、エラー
+        errorMissingId();
+    } else {
         // ( が来るはず
         token = checkGet(nextToken(), Lparen);
 
@@ -151,8 +178,243 @@ void funcDecl() {
         block();
         // ; が来るはず
         token = checkGet(token, Semicolon);
+    }
+}
+
+/*
+    文
+*/
+void statement() {
+
+    // うまいこと、break; をしないで活用する
+
+    while (1) {
+
+        switch (token.kind) {
+        case Id: /* ident := <expression> */
+            // := が来るはず
+            token = checkGet(nextToken(), Assign);
+            expression();
+            return;
+
+        case If: /* if <condition> then <statement> */
+            token = nextToken();
+            condition();
+            // then のはず
+            token = checkGet(token, Then);
+            statement();
+            return;
+
+        case Ret: /* return <expression> */
+            token = nextToken();
+            expression();
+            return;
+
+        case Begin: /* begin <statement> { ; <statement> } end */
+
+            // <statement> { ; <statement> }
+            token = nextToken();
+            while (1) {
+                statement();
+
+                // { ; <statement> } の部分
+                while (1) {
+                    if (token.kind == Semicolon) {
+                        token = nextToken();
+                        // 次の statement を読み出すため
+                        break;
+                    }
+                    if (token.kind == End) {
+                        // ; ではなく、end が来たら、終わり
+                        token = nextToken();
+                        return;
+                    }
+
+                    if (isStBeginKey(token)) {
+                        // 次が、statement だから、; の入れ忘れだとわかる
+                        errorInsert(Semicolon);
+                        // token が次の statement
+                        // 次の statement の最初のトークンだから、nextToken()
+                        // は呼び出さない token = nextToken();
+                        break;
+                    }
+                    // それ以外なら、エラーとして読み捨てる
+                    // ( ; でもなく、 end
+                    // でもなく、次の文の最初のトークンでもない場合 )
+                    errorDelete();
+                    token = nextToken();
+                }
+            }
+
+            // あえて、return せずに、下の case を利用する
+            // return;
+
+        case While: /* while <condition> do <statement> */
+            token = nextToken();
+            condition();
+            // Do のはず
+            token = checkGet(token, Do);
+            statement();
+            return;
+
+        case Write: /* write <expression> */
+            token = nextToken();
+            expression();
+            return;
+
+        case WriteLn: /* writeln */
+            token = nextToken();
+            return;
+
+        case End:
+        case Semicolon:
+            // TODO: これは何？？
+            return;
+
+        default:
+            // 今読んだトークンを読み捨てる
+            errorDelete();
+            token = nextToken();
+            // 一応、statement として、読み進めたいから (?) continue する (?)
+            continue;
+        }
+    }
+}
+
+/*
+    トークンt が文の先頭の終端記号か？
+    これを使えば、 ; を入れ忘れたことがわかる
+        <statement> { ; <statement> } であるため
+*/
+int isStBeginKey(Token t) {
+    // First(<statement>) - { e } なら、; を忘れたことになる
+    switch (t.kind) {
+    case Begin:
+    case If:
+    case While:
+    case Ret:
+    case Write:
+    case WriteLn:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+/*
+   条件
+    condition -> odd <expression>
+               | <expression> ( = | <> | > | < | <= | >= ) <expression>
+*/
+void condition() {
+    if (token.kind == Odd) {
+        token = nextToken();
+        expression();
     } else {
-        // 関数名が来るはずだから、エラー
-        errorMissingId();
+
+        expression();
+
+        // ( = | <> | > | < | <= | >= ) の部分
+        switch (token.kind) {
+        /* 演算子 */
+        case Equal: // =
+        case NotEq: // <>
+        case Gtr:   // <
+        case Lss:   // >
+        case GtrEq: // <=
+        case LssEq:
+            // >=
+            break;
+        default:
+            errorType("rel-op");
+            break;
+        }
+
+        expression();
+    }
+}
+
+/*
+    式
+    expression -> ( + | - | e ) <term> { ( + | - ) <term> }
+*/
+void expression() {
+    // ( + | - | e ) <term>
+    if (token.kind == Plus || token.kind == Minus) {
+        token = nextToken();
+        term();
+    } else {
+        term();
+    }
+
+    // { ( + | - ) <term> }
+    while (token.kind == Plus || token.kind == Minus) {
+        // まずは読みすすめる
+        token = nextToken();
+        term();
+    }
+
+    // if (token.kind == Plus) {
+    //     // +
+    //     token = nextToken();
+    // } else if (token.kind == Minus) {
+    //     // -
+    //     token = nextToken();
+    // } else {
+    //     // e
+    // }
+
+    // while (1) {
+    //     term();
+
+    //     if (token.kind == Plus) {
+    //         token = nextToken();
+    //     } else if (token.kind == Minus) {
+    //         token = nextToken();
+    //     } else {
+    //         // TODO: error
+    //     }
+    // }
+}
+
+/*
+    term -> <factor> { ( * | / ) <factor> }
+*/
+void term() {
+    factor();
+
+    while (token.kind == Mult || token.kind == Div) {
+        token = nextToken();
+        factor();
+    }
+}
+
+/*
+   因子
+    factor -> ident
+            | number
+            | ident '(' ( e | <expression> { , <expression> } ) ')'
+            | '(' <expression> ')'
+
+    '(' と ')' は原子プログラムにそのまま現れる
+    ident は、プログラムの意味で見分ける
+*/
+void factor() {
+    if (token.kind == Num) {
+        /* number */
+        token = nextToken();
+    } else if (token.kind == Lparen) {
+        /* '(' <expression> ')' */
+        token = nextToken();
+        expression();
+        // ) のはず
+        token = checkGet(token, Rparen);
+    } else if (token.kind == Id) {
+        // ident か ident '(' ( e | <expression> { , <expression> } ) ')'
+
+        // TODO: XXX: 記号表の管理、意味解析しないと無理かも？
+
+        // とりあえずは ident とする (関数呼び出しは後でやる)
+        token = nextToken();
     }
 }

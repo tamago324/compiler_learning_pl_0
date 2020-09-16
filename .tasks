@@ -21,3 +21,12 @@ errorformat=%f:%l:%m
 
 # save file before execute
 save=1
+
+
+[run]
+
+command=main.exe sample.pl0
+cwd=$(VIM_ROOT)
+output=terminal
+errorformat=%f:%l:%m
+save=1
