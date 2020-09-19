@@ -126,13 +126,13 @@ static void initCharClassTbl() {
     for (int i = 0; i < 256; i++) {
         charClassTbl[i] = others;
     }
-    for (int i = '0'; i < '9'; i++) {
+    for (int i = '0'; i <= '9'; i++) {
         charClassTbl[i] = digit;
     }
-    for (int i = 'A'; i < 'Z'; i++) {
+    for (int i = 'A'; i <= 'Z'; i++) {
         charClassTbl[i] = letter;
     }
-    for (int i = 'a'; i < 'z'; i++) {
+    for (int i = 'a'; i <= 'z'; i++) {
         charClassTbl[i] = letter;
     }
 
