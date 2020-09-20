@@ -97,13 +97,15 @@ void constDecl() {
             }
             token = nextToken();
         } else {
-            // 仮の識別子を入れる
+            // 仮の識別子を insert (phrase level recovery)
             errorMissingId();
         }
 
         if (token.kind != Comma) {
+
             if (token.kind == Id) {
                 // Id Id となっていたら、, の入れ忘れだと思うから、入れてあげる
+                // phrase level recovery
                 errorInsert(Comma);
                 continue;
             } else {
@@ -111,6 +113,9 @@ void constDecl() {
             }
         }
 
+        // const a = 10, b = 20;
+        //             ^
+        // , であるため、次の識別子を読みすすめる
         token = nextToken();
     }
 
@@ -129,17 +134,27 @@ void varDecl() {
             // TODO: 識別子を記号表に登録
             token = nextToken();
         } else {
-            // 識別子のはずだから、エラーとする
+            // 識別子のはずだから、insert (phrase level recovery)
             errorMissingId();
         }
 
         if (token.kind != Comma) {
-            break;
+            if (token.kind == Id) {
+                // , の入れ忘れ  (phrase level recovery)
+                errorInsert(Comma);
+                continue;
+            } else {
+                break;
+            }
         }
 
+        // var a, b;
+        //      ^
+        // , であるため、次の識別子を読みすすめる
         token = nextToken();
     }
 
+    // ; のはず
     token = checkGet(token, Semicolon);
 }
 
@@ -150,7 +165,7 @@ void varDecl() {
 void funcDecl() {
 
     if (token.kind != Id) {
-        // 関数名が来るはずだから、エラー
+        // 関数名が来るはずだから、関数名を insert
         errorMissingId();
     } else {
         // ( が来るはず
@@ -167,14 +182,33 @@ void funcDecl() {
             }
 
             if (token.kind != Comma) {
-                // 複数の引数ではないため、終わり
-                break;
+                if (token.kind == Id) {
+                    // phrase level recovery
+                    errorInsert(Comma);
+                    continue;
+                } else {
+                    // 複数の引数ではないため、終わり
+                    // f1(a, b | ) のように , でもなく、Id でもないなら、終わり
+                    break;
+                }
             }
 
             token = nextToken();
         }
+        // ) のはず
+        token = checkGet(token, Rparen);
+
+        if (token.kind == Semicolon) {
+            // 誤り回復
+            // XXX: なぜ、ここで ; を判定している？
+            //  -> block の前に ;
+            //  を書いていたら、消すことで誤りから回復している？
+            errorDelete();
+            token = nextToken();
+        }
 
         // ブロックのコンパイル
+        // TODO: 引数を渡す
         block();
         // ; が来るはず
         token = checkGet(token, Semicolon);
@@ -188,6 +222,8 @@ void statement() {
 
     // うまいこと、break; をしないで活用する
 
+    // panic mode recovery を使っている？？
+    // Follow(statement) = { . ; end }
     while (1) {
 
         switch (token.kind) {
@@ -232,15 +268,14 @@ void statement() {
 
                     if (isStBeginKey(token)) {
                         // 次が、statement だから、; の入れ忘れだとわかる
+                        // First(statement)  ... statement の First 集合
                         errorInsert(Semicolon);
                         // token が次の statement
-                        // 次の statement の最初のトークンだから、nextToken()
-                        // は呼び出さない token = nextToken();
+                        // 次の statement の最初のトークンだから、
+                        // nextToken()は呼び出さない
                         break;
                     }
-                    // それ以外なら、エラーとして読み捨てる
-                    // ( ; でもなく、 end
-                    // でもなく、次の文の最初のトークンでもない場合 )
+                    // panic mode recovery
                     errorDelete();
                     token = nextToken();
                 }
@@ -269,22 +304,24 @@ void statement() {
         case End:
         case Semicolon:
             // TODO: これは何？？
+            // 終わりを示している？
             return;
 
         default:
             // 今読んだトークンを読み捨てる
+            // panic mode recovery を使っている
+            // Follow(statement) = { . ; end }
             errorDelete();
             token = nextToken();
-            // 一応、statement として、読み進めたいから (?) continue する (?)
+            // 誤り回復したため、継続できる
             continue;
         }
     }
 }
 
 /*
-    トークンt が文の先頭の終端記号か？
-    これを使えば、 ; を入れ忘れたことがわかる
-        <statement> { ; <statement> } であるため
+    panic mode recovery のためのもの
+    First(statement) - { e } を表している
 */
 int isStBeginKey(Token t) {
     // First(<statement>) - { e } なら、; を忘れたことになる
@@ -322,14 +359,15 @@ void condition() {
         case Gtr:   // <
         case Lss:   // >
         case GtrEq: // <=
-        case LssEq:
-            // >=
+        case LssEq: // >=
             break;
         default:
+            // 誤り回復？？
             errorType("rel-op");
             break;
         }
 
+        token = nextToken();
         expression();
     }
 }
@@ -353,28 +391,6 @@ void expression() {
         token = nextToken();
         term();
     }
-
-    // if (token.kind == Plus) {
-    //     // +
-    //     token = nextToken();
-    // } else if (token.kind == Minus) {
-    //     // -
-    //     token = nextToken();
-    // } else {
-    //     // e
-    // }
-
-    // while (1) {
-    //     term();
-
-    //     if (token.kind == Plus) {
-    //         token = nextToken();
-    //     } else if (token.kind == Minus) {
-    //         token = nextToken();
-    //     } else {
-    //         // TODO: error
-    //     }
-    // }
 }
 
 /*

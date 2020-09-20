@@ -352,6 +352,8 @@ Token nextToken() {
             spaces += TAB;
         } else if (ch == '\n') {
             // TODO: リセットするのは、なぜ？
+            //  -> 改行するまえのスペースは要らないため
+            //  aa   <CR> ってなってたら、aa の後ろのスペースは要らないでしょう
             spaces = 0;
             CR++;
         } else {
@@ -491,13 +493,14 @@ Token checkGet(Token t, KeyId k) {
     }
 
     if ((isKeyWd(k) && isKeyWd(t.kind)) || (isKeySym(k) && isKeySym(t.kind))) {
-        // 間違えたのかな？ってことで置き換える
+        // 間違えたのかな？ってことで置き換える (phrase level recovery)
         errorDelete();
         errorInsert(k);
         return nextToken();
     }
 
     // ぜんぜん違うから、正しいと思われるものを insert して、そのまま返す
+    // (phrase level recovery)
     errorInsert(k);
     return t;
 }
