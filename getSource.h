@@ -1,5 +1,5 @@
 #include <stdio.h>
-#ifdef TBL
+#ifndef TBL
 #define TBL
 #include "table.h"
 #endif
@@ -99,3 +99,5 @@ void errorInsert(KeyId k); /* 文字が足りないから、tex ファイルに�
 void errorMissingId(); /* 識別子を置くはずのところにないですよー！って示す */
 void errorDelete(); /* 今読んだトークンを読み捨てる */
 int errorN();       /* エラーの個数を返す */
+
+void setIdKind(KindT k); /* 現在のトークンの種類をセット */

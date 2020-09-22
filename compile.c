@@ -1,8 +1,18 @@
+#include "codegen.h"
 #include "getSource.h"
 #include <stdio.h>
 
+#ifndef TBL
+#define TBL
+#include "table.h"
+#endif
+
 /* このエラー数以下なら、OK */
 #define MINERROR 3
+/* 各ブロックの最初の変数のアドレス
+    XXX: なせ、2？
+*/
+#define FIRSTADDR 2
 
 static void block();      // ブロック
 static void constDecl();  // 定数宣言
@@ -24,13 +34,13 @@ int compile() {
     int errN;
 
     printf("start compilation\n");
-
     initSource();
     // 最初の token 読み出し
     token = nextToken();
-    block();
+    // ブロックの開始 (いろいろ初期化)
+    blockBegin(FIRSTADDR);
+    block(0);
     finalSource();
-
     // エラー数の取得
     errN = errorN();
     if (errN != 0) {
@@ -38,11 +48,9 @@ int compile() {
     }
     // 最大エラー数よりも少ないか？
     return errN < MINERROR;
-
-    return 1;
 }
 
-void block() {
+void block(int pIndex) {
     /* block -> { ( constDecl | varDecl | funcDecl ) } statement */
     while (1) {
         switch (token.kind) {
@@ -70,7 +78,10 @@ void block() {
 
         break;
     }
+    changeV(pIndex, nextCode());
     statement();
+
+    blockEnd();
 }
 
 /*
@@ -81,16 +92,23 @@ void constDecl() {
 
     /* block の部分で、 const は認識しているため、ここではチェックしない*/
 
+    Token temp;
+
     while (1) {
         /* { ident = number // , } */
 
         // ident
         if (token.kind == Id) {
+            // 現在のトークンの種類をセット
+            setIdKind(constId);
+            // 変数名を保持
+            temp = token;
             // = のはず
             token = checkGet(nextToken(), Equal);
 
             if (token.kind == Num) {
-                // TODO: 記号表に登録
+                // 定数名と値を登録
+                enterTconst(temp.u.id, token.u.value);
             } else {
                 // 型エラー
                 errorType("number");
@@ -131,7 +149,9 @@ void varDecl() {
 
     while (1) {
         if (token.kind == Id) {
-            // TODO: 識別子を記号表に登録
+            setIdKind(varId);
+            // 識別子を記号表に登録
+            enterTvar(token.u.id);
             token = nextToken();
         } else {
             // 識別子のはずだから、insert (phrase level recovery)
@@ -164,17 +184,27 @@ void varDecl() {
 */
 void funcDecl() {
 
+    int fIndex;
     if (token.kind != Id) {
         // 関数名が来るはずだから、関数名を insert
         errorMissingId();
     } else {
+        setIdKind(funcId);
+
+        fIndex = enterTfunc(token.u.id, nextCode());
+
         // ( が来るはず
         token = checkGet(nextToken(), Lparen);
+        // パラメータのレベルは、関数の本体と同じブロックになる
+        //  -> そのブロック内で宣言された局所変数と同じってこと！！
+        blockBegin(FIRSTADDR);
 
         while (1) {
             if (token.kind == Id) {
                 /* 仮引数の識別子 */
-                // TODO: 記号表に登録
+                setIdKind(parId);
+                // パラメータ名を名前表に追加
+                enterTpar(token.u.id);
                 token = nextToken();
             } else {
                 /* 仮引数なし */
@@ -197,6 +227,8 @@ void funcDecl() {
         }
         // ) のはず
         token = checkGet(token, Rparen);
+        // パラメータの部分が終わったから、ブロックの終わり
+        endpar();
 
         if (token.kind == Semicolon) {
             // 誤り回復
@@ -208,8 +240,7 @@ void funcDecl() {
         }
 
         // ブロックのコンパイル
-        // TODO: 引数を渡す
-        block();
+        block(fIndex);
         // ; が来るはず
         token = checkGet(token, Semicolon);
     }
@@ -220,6 +251,9 @@ void funcDecl() {
 */
 void statement() {
 
+    int tIndex;
+    KindT k;
+
     // うまいこと、break; をしないで活用する
 
     // panic mode recovery を使っている？？
@@ -228,6 +262,14 @@ void statement() {
 
         switch (token.kind) {
         case Id: /* ident := <expression> */
+            tIndex = searchT(token.u.id, varId);
+            setIdKind(k = kindT(tIndex));
+
+            if (k != varId && k != parId) {
+                // 未定義の変数なら、エラー
+                // 変数でもなく、パラメータ名でもない
+                errorType("var/par");
+            }
             // := が来るはず
             token = checkGet(nextToken(), Assign);
             expression();
@@ -416,6 +458,10 @@ void term() {
     ident は、プログラムの意味で見分ける
 */
 void factor() {
+
+    int tIndex, i;
+    KindT k;
+
     if (token.kind == Num) {
         /* number */
         token = nextToken();
@@ -427,10 +473,73 @@ void factor() {
         token = checkGet(token, Rparen);
     } else if (token.kind == Id) {
         // ident か ident '(' ( e | <expression> { , <expression> } ) ')'
+        tIndex = searchT(token.u.id, varId);
+        k = kindT(tIndex);
+        switch (k) {
 
-        // TODO: XXX: 記号表の管理、意味解析しないと無理かも？
+        /* 変数名 or パラメータ名 */
+        case varId:
+        case parId:
+            token = nextToken();
+            break;
 
-        // とりあえずは ident とする (関数呼び出しは後でやる)
-        token = nextToken();
+        /* 定数 */
+        case constId:
+            token = nextToken();
+            break;
+
+        /* 関数呼び出し */
+        case funcId:
+            token = nextToken();
+
+            if (token.kind == Lparen) {
+                // 実引数の個数
+                i = 0;
+                token = nextToken();
+                if (token.kind != Rparen) {
+                    // 引数ありの場合
+                    for (;;) {
+                        i++;
+                        expression();
+                        // もし、',' なら、実引数が続く
+                        if (token.kind == Comma) {
+                            token = nextToken();
+                            continue;
+                        }
+                        // ')' のはず
+                        // チェック & 誤り回復
+                        token = checkGet(token, Rparen);
+                        break;
+                    }
+                } else {
+                    // 引数なしの関数呼び出しってこと
+                    token = nextToken();
+                }
+
+                // もし、関数定義のパラメータと合わなかった場合、エラー
+                if (pars(tIndex) != i) {
+                    printf("%d", pars(tIndex));
+                    errorMessage("#par");
+                }
+            } else {
+                // おかしい...
+                // 誤り回復
+                // '()' を insert
+                errorInsert(Lparen);
+                errorInsert(Rparen);
+            }
+            break;
+        }
     }
+
+    // TODO: まだ、因子が続くなら、エラー
+    /* switch (token.kind) { */
+    /* case Id: */
+    /* case Num: */
+    /* case Lparen: */
+    /*     errorMissingOp(); */
+    /*     factor(); */
+    /* default: */
+    /*     return; */
+    /* } */
 }

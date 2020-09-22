@@ -5,7 +5,7 @@
 
 # shell command, use quotation for filenames containing spaces
 # check ":AsyncTaskMacro" to see available macros
-command=gcc.exe -g main.c compile.c compile.h getSource.c getSource.h table.h -o main.exe
+command=gcc.exe -g main.c compile.c compile.h getSource.c getSource.h table.h table.c codegen.h codegen.c -o main.exe
 
 # working directory, can change to $(VIM_ROOT) for project root
 cwd=$(VIM_ROOT)

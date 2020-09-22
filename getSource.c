@@ -1,8 +1,11 @@
 #include "getSource.h"
-#include "table.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef TBL
+#define TBL
+#include "table.h"
+#endif
 
 // 1行あたりの最大文字数
 #define MAXLINE 120
@@ -39,7 +42,8 @@ static int ch;
 //   -> トークンの表示に使う
 static Token cToken;
 
-/* static KindT idKind; */
+// 現在のトークンの種類
+static KindT idKind;
 
 // そのトークンの前のスペースの個数
 static int spaces;
@@ -339,6 +343,8 @@ Token nextToken() {
     KeyId cc;
     Token tok;
     char ident[MAXNAME];
+
+    // 表示
     printcToken();
     spaces = 0;
     CR = 0;
@@ -351,9 +357,7 @@ Token nextToken() {
             // タブの場合、スペース数で加算
             spaces += TAB;
         } else if (ch == '\n') {
-            // TODO: リセットするのは、なぜ？
-            //  -> 改行するまえのスペースは要らないため
-            //  aa   <CR> ってなってたら、aa の後ろのスペースは要らないでしょう
+            //  aa   <CR> ってなってたら、aa の後ろのスペースは要らないため
             spaces = 0;
             CR++;
         } else {
@@ -547,33 +551,29 @@ void printcToken() {
         printf("<\"%s\">\n", KeyWdTbl[i].lexeme);
     } else if (i == (int)Id) {
         /* 識別子 */
-
-        // TODO: あとで、トークンの種類によって、書体を変えるようにする
-        fprintf_s(fptex, "%s", cToken.u.id);
         printf("<Id, \"%s\">\n", cToken.u.id);
 
-        /* switch (idKind) { */
-        /*  */
-        /* case varId: */
-        /*     // 変数 (なし) */
-        /*     fprintf_s(fptex, "%s", cToken.u.id); */
-        /*     break; */
-        /*  */
-        /* case parId: */
-        /*     // ？ (斜体) */
-        /*     fprintf_s(fptex, "<i>%s</i>", cToken.u.id); */
-        /*     break; */
-        /*  */
-        /* case funcId: */
-        /*     // 関数 (italic 強調) */
-        /*     fprintf_s(fptex, "<i>%s</i>", cToken.u.id); */
-        /*     break; */
-        /*  */
-        /* case constId: */
-        /*     // 定数 (Sans-serif) */
-        /*     fprintf_s(fptex, "<tt>%s</tt>", cToken.u.id); */
-        /*     break; */
-        /* } */
+        switch (idKind) {
+        case varId:
+            // 変数 (なし)
+            fprintf_s(fptex, "%s", cToken.u.id);
+            return;
+
+        case parId:
+            // パラメータ (斜体)
+            fprintf_s(fptex, "<i>%s</i>", cToken.u.id);
+            return;
+
+        case funcId:
+            // 関数 (italic 強調)
+            fprintf_s(fptex, "<i>%s</i>", cToken.u.id);
+            return;
+
+        case constId:
+            // 定数 (Sans-serif)
+            fprintf_s(fptex, "<tt>%s</tt>", cToken.u.id);
+            return;
+        }
     } else if (i == (int)Num) {
         /* 数値 */
         fprintf_s(fptex, "%d", cToken.u.value);
@@ -585,3 +585,8 @@ void printcToken() {
     エラーの個数を返す
 */
 int errorN() { return errorCnt; }
+
+/* 現在のトークンの種類をセット */
+void setIdKind(KindT k) {
+    idKind = k;
+}

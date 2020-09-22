@@ -3,7 +3,7 @@
   // debugger settings
   "configurations": {
 
-    "run with args - $current.c": {
+    "run with args - main.exe": {
       "adapter": "vscode-cpptools",
       "configuration": {
         "request": "launch",
