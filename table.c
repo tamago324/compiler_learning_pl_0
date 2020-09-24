@@ -26,12 +26,12 @@ typedef struct {
         // 定数の場合
         int value; // 値
 
-        // 変数、パラメータの場合
-        RelAddr raddr; // アドレス
+        /* // 変数、パラメータの場合 */
+        /* RelAddr raddr; // アドレス */
 
         // 関数の場合
         struct {
-            RelAddr raddr; // 先頭アドレス
+            /* RelAddr raddr; // 先頭アドレス */
             int pars;      // パラメータの数
         } f;
     } u;
@@ -78,6 +78,7 @@ void blockBegin(int firstAddr) {
     }
 
     /* 前のブロックの情報を格納 */
+    // 名前表の探索のとき、そこから下を探せるようになる
     index[level] = tIndex;
     addr[level] = localAddr;
     /* 新しいブロックの最初の変数の番地を設定 */
@@ -98,8 +99,8 @@ void blockEnd() {
 
 /* 名前表に名前を登録 */
 void enterT(char *id) {
+    // 1から入れていく (0 は番兵として使うため)
     if (tIndex++ < MAXTABLE) {
-        // 1から入れていく (0 は番兵として使うため)
         strcpy_s(nameTable[tIndex].name, sizeof(nameTable[tIndex].name), id);
     } else {
         errorF("too many names");
@@ -110,9 +111,9 @@ void enterT(char *id) {
 int enterTfunc(char *id, int v) {
     enterT(id);
     nameTable[tIndex].kind = funcId;
-    nameTable[tIndex].u.raddr.level = level;
-    // 関数の先頭の番地
-    nameTable[tIndex].u.f.raddr.addr = v;
+    /* nameTable[tIndex].u.raddr.level = level; */
+    /* // 関数の先頭の番地 */
+    /* nameTable[tIndex].u.f.raddr.addr = v; */
     // パラメータ数の初期値
     nameTable[tIndex].u.f.pars = 0;
     // パラメータの管理に使うため、保持
@@ -126,10 +127,10 @@ int enterTvar(char *id) {
     enterT(id);
     // 情報を登録
     nameTable[tIndex].kind = varId;
-    // XXX: 何に使う？
-    nameTable[tIndex].u.raddr.level = level;
-    // XXX: 何に使う？
-    nameTable[tIndex].u.raddr.addr = localAddr++;
+    /* // XXX: 何に使う？ */
+    /* nameTable[tIndex].u.raddr.level = level; */
+    /* // XXX: 何に使う？ */
+    /* nameTable[tIndex].u.raddr.addr = localAddr++; */
     return tIndex;
 }
 
@@ -139,7 +140,7 @@ int enterTpar(char *id) {
     //  -> パラメータは、関数本体での局所変数と同じと考えられるってこと！
     enterT(id);
     nameTable[tIndex].kind = parId;
-    nameTable[tIndex].u.raddr.level = level;
+    /* nameTable[tIndex].u.raddr.level = level; */
     /* nameTable[tIndex].u.raddr.addr は 後で、まとめて設定する */
     // 関数のパラメータ数を加算
     nameTable[tfIndex].u.f.pars++;
@@ -162,16 +163,16 @@ void endpar() {
     if (pars == 0) {
         return;
     }
-    // パラメータのアドレスの設定
-    for (int i = 1; i <= pars; i++) {
-        nameTable[tfIndex + i].u.raddr.addr = i - 1 - pars;
-    }
+    /* // パラメータのアドレスの設定 */
+    /* for (int i = 1; i <= pars; i++) { */
+    /*     nameTable[tfIndex + i].u.raddr.addr = i - 1 - pars; */
+    /* } */
 }
 
-/* 名前表[ti] の値の変更 (関数の先頭の番地を変更) */
-void changeV(int ti, int newVal) {
-    nameTable[ti].u.f.raddr.addr = newVal;
-}
+/* #<{(| 名前表[ti] の値の変更 (関数の先頭の番地を変更) |)}># */
+/* void changeV(int ti, int newVal) { */
+/*     nameTable[ti].u.f.raddr.addr = newVal; */
+/* } */
 
 /* 名前id を探す */
 int searchT(char *id, KindT k) {

@@ -34,8 +34,8 @@ int enterTvar(char *id);
 int enterTpar(char *id);
 /* 関数のパラメータの宣言の終わりのときに呼ばれる */
 void endpar();
-/* 名前表[ti] の値の変更 (関数の先頭の番地を変更) */
-void changeV(int ti, int newVal);
+// /* 名前表[ti] の値の変更 (関数の先頭の番地を変更) */
+// void changeV(int ti, int newVal);
 
 /*
    名前表の 名前id の位置を返す

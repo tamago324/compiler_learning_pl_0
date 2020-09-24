@@ -78,7 +78,7 @@ void block(int pIndex) {
 
         break;
     }
-    changeV(pIndex, nextCode());
+    /* changeV(pIndex, nextCode()); */
     statement();
 
     blockEnd();
