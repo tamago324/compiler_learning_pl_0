@@ -39,6 +39,8 @@ int compile() {
     token = nextToken();
     // ブロックの開始 (いろいろ初期化)
     blockBegin(FIRSTADDR);
+    // 0 をダミーとして渡しておく
+    // メイン処理のため、名前表の関数名の番地は存在しないため
     block(0);
     finalSource();
     // エラー数の取得

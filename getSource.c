@@ -234,8 +234,7 @@ void initSource() {
     fprintf(fptex, "<head>");
     fprintf(fptex, "<meta charset=\"utf-8\">\n");
     fprintf(fptex, "<style type=\"text/css\">\n");
-    fprintf(fptex, "body {background: %s; color: %s}\n", COLOR_BG,
-            COLOR_FG);
+    fprintf(fptex, "body {background: %s; color: %s}\n", COLOR_BG, COLOR_FG);
     fprintf(fptex, ".insert {color: %s}\n", INSERT_C);
     fprintf(fptex, ".delete {color: %s}\n", DELETE_C);
     fprintf(fptex, ".type {color: %s}\n", TYPE_C);
@@ -587,6 +586,4 @@ void printcToken() {
 int errorN() { return errorCnt; }
 
 /* 現在のトークンの種類をセット */
-void setIdKind(KindT k) {
-    idKind = k;
-}
+void setIdKind(KindT k) { idKind = k; }

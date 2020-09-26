@@ -161,7 +161,7 @@ void execute() {
     //  call の次の番地 => 手続きから呼び出し元に戻るときに使う
     stack[1] = 0;
 
-    // 主ブロックの先頭番地は 0 
+    // 主ブロックの先頭番地は 0
     display[0] = 0;
 
     do {
@@ -178,8 +178,8 @@ void execute() {
             stack[display[i.u.addr.level] + i.u.addr.addr] = stack[--top];
             break;
         case ret:
-            // TODO: 関数呼び出しを実装するときに、display の内容の回復を実装する
-            // 先頭番地の取得
+            // TODO: 関数呼び出しを実装するときに、display
+            // の内容の回復を実装する 先頭番地の取得
             top = display[i.u.addr.level];
             // 処理を戻り番地に移す (各フレームの2番目に戻り番地が入っている)
             pc = stack[top + 1];

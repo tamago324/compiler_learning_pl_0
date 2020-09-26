@@ -98,9 +98,7 @@ void blockEnd() {
 }
 
 /* 現在のレベルを返す */
-int bLevel(){
-    return level;
-}
+int bLevel() { return level; }
 
 /* int fPars() { */
 /*     // TODO: なぜ、level-1？ */
@@ -213,14 +211,10 @@ int searchT(char *id, KindT k) {
 }
 
 // 名前表[i]の種類を返す
-KindT kindT(int i){
-    return nameTable[i].kind;
-}
+KindT kindT(int i) { return nameTable[i].kind; }
 
 /* 関数のパラメータの個数 */
-int pars(int ti) {
-    return nameTable[ti].u.f.pars;
-}
+int pars(int ti) { return nameTable[ti].u.f.pars; }
 
 /* 名前表[ti] のアドレス情報 */
 RelAddr relAddr(int tblIdx) { return nameTable[tblIdx].u.raddr; }

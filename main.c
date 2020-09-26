@@ -1,11 +1,10 @@
+#include "codegen.h"
+#include "compile.h"
+#include "getSource.h"
 #include <stdio.h>
 #include <string.h>
-#include "getSource.h"
-#include "compile.h"
-#include "codegen.h"
 
-int main(int argc, char const* argv[])
-{
+int main(int argc, char const *argv[]) {
     // ソースファイルのファイル名
     char fileName[30];
 
