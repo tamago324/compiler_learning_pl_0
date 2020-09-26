@@ -13,6 +13,10 @@
 #define MAXMEM 2000
 /* ブロックの最大の深さ */
 #define MAXLEVEL 5
+/* 演算レジスタスタックの最大の長さ
+   (XXX: どゆこと？？？)
+*/
+#define MAXREG 20
 
 /* 命令語の情報 */
 typedef struct inst {
@@ -75,6 +79,10 @@ void printCode(int i) {
     case sto:
         printf("sto");
         flag = 2;
+        break;
+    case ict:
+        printf("ict");
+        flag = 1;
         break;
     default:
         flag = 1;
@@ -143,6 +151,14 @@ void execute() {
             // sto, level, addr
             // 変数の場所に、スタックの先頭のデータを格納する
             stack[display[i.u.addr.level] + i.u.addr.addr] = stack[--top];
+            break;
+        case ict:
+            top += i.u.value;
+            if (top >= MAXMEM - MAXREG) {
+                // スタックの最大を超えたら、だめ
+                // XXX: MAXREG ってなに...？
+                errorF("stack overflow");
+            }
             break;
         default:
             break;

@@ -81,8 +81,12 @@ void block(int pIndex) {
         break;
     }
     /* changeV(pIndex, nextCode()); */
-    statement();
 
+    // 変数宣言などをしていた場合、実行時に必要な領域分だけ、
+    // トップを増加させる必要がある
+    genCodeV(ict, frameL());
+
+    statement();
     blockEnd();
 }
 

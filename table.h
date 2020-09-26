@@ -50,3 +50,6 @@ KindT kindT(int i);
 int pars(int ti);
 /* 名前表[tblIdx] のアドレス情報 */
 RelAddr relAddr(int tblIdx);
+
+/* そのレベルで実行時に必要な領域の数 */
+int frameL();

@@ -5,6 +5,7 @@ typedef enum codes {
     opr,
     lod,
     sto,
+    ict,
     jmp
 } OpCode;
 

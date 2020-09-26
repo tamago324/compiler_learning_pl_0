@@ -2,6 +2,7 @@
 #include <string.h>
 #include "getSource.h"
 #include "compile.h"
+#include "codegen.h"
 
 int main(int argc, char const* argv[])
 {
@@ -15,8 +16,8 @@ int main(int argc, char const* argv[])
         return -1;
     }
     if (compile(fileName)) {
-        // XXX: エラー数が3以下なら、実行
-        /* execute(); */
+        // エラー数が3以下なら、実行
+        execute();
     }
     closeSource();
     return 0;
