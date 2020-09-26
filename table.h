@@ -15,7 +15,7 @@ typedef enum {
 typedef struct {
     // 入れ子の深さ
     int level;
-    // XXX: アドレス？
+    // level 内での相対番地 (オフセット)
     int addr;
 } RelAddr;
 
@@ -48,3 +48,5 @@ KindT kindT(int i);
 
 /* 名前表[ti] の関数のパラメータの個数 */
 int pars(int ti);
+/* 名前表[tblIdx] のアドレス情報 */
+RelAddr relAddr(int tblIdx);

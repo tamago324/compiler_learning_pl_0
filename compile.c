@@ -46,6 +46,8 @@ int compile() {
     if (errN != 0) {
         printf("%d errors\n", errN);
     }
+    // 目的コードの表示
+    listCode();
     // 最大エラー数よりも少ないか？
     return errN < MINERROR;
 }
@@ -273,6 +275,8 @@ void statement() {
             // := が来るはず
             token = checkGet(nextToken(), Assign);
             expression();
+            // store 命令のコードを生成
+            genCodeT(sto, tIndex);
             return;
 
         case If: /* if <condition> then <statement> */

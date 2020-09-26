@@ -26,13 +26,13 @@ typedef struct {
         // 定数の場合
         int value; // 値
 
-        /* // 変数、パラメータの場合 */
-        /* RelAddr raddr; // アドレス */
+        // 変数、パラメータの場合
+        RelAddr raddr; // アドレス
 
         // 関数の場合
         struct {
             /* RelAddr raddr; // 先頭アドレス */
-            int pars;      // パラメータの数
+            int pars; // パラメータの数
         } f;
     } u;
 
@@ -47,14 +47,12 @@ static int level = -1;
 
 /* index[i] には、ブロックレベル i での名前表の最後のインデックスが入る */
 static int index[MAXLEVEL];
-/* addr[i] には、ブロックレベル i の最後の変数の番地が入る */
+/* addr[i] には、ブロックレベル i で最後に登録した変数の番地が入る */
 static int addr[MAXLEVEL];
 
 /*
-   現在のブロックの最後の変数の番地
-   変数を登録するたびに、加算される
-   XXX: 何に使っている？
-    -> frameL (frame length) ？
+   変数の番地
+    現在のレベル内で登録した変数の最後の番地を表している
 */
 static int localAddr;
 
@@ -66,7 +64,8 @@ void blockBegin(int firstAddr) {
     // メインのブロックのため、初期化
     if (level == -1) {
         localAddr = firstAddr;
-        // 名前表は１番目からスタート
+        // 名前表は１番目からスタート (enterT で ++tIndex
+        // としているため、必ず1から入る)
         tIndex = 0;
         level++;
         return;
@@ -80,8 +79,9 @@ void blockBegin(int firstAddr) {
     /* 前のブロックの情報を格納 */
     // 名前表の探索のとき、そこから下を探せるようになる
     index[level] = tIndex;
+    // 次に登録する番地のベースとして使うため
     addr[level] = localAddr;
-    /* 新しいブロックの最初の変数の番地を設定 */
+    /* そのレベル内でのオフセットになるため、初期化 */
     localAddr = firstAddr;
     /* 新しいブロックだから、１加算 */
     level++;
@@ -100,7 +100,7 @@ void blockEnd() {
 /* 名前表に名前を登録 */
 void enterT(char *id) {
     // 1から入れていく (0 は番兵として使うため)
-    if (tIndex++ < MAXTABLE) {
+    if (++tIndex < MAXTABLE) {
         strcpy_s(nameTable[tIndex].name, sizeof(nameTable[tIndex].name), id);
     } else {
         errorF("too many names");
@@ -127,10 +127,10 @@ int enterTvar(char *id) {
     enterT(id);
     // 情報を登録
     nameTable[tIndex].kind = varId;
-    /* // XXX: 何に使う？ */
-    /* nameTable[tIndex].u.raddr.level = level; */
-    /* // XXX: 何に使う？ */
-    /* nameTable[tIndex].u.raddr.addr = localAddr++; */
+    // store のコードを生成するとき、
+    // レベルとそのレベルでのオフセットが必要なため、ここでセットする
+    nameTable[tIndex].u.raddr.level = level;
+    nameTable[tIndex].u.raddr.addr = localAddr++;
     return tIndex;
 }
 
@@ -211,3 +211,6 @@ KindT kindT(int i){
 int pars(int ti) {
     return nameTable[ti].u.f.pars;
 }
+
+/* 名前表[ti] のアドレス情報 */
+RelAddr relAddr(int tblIdx) { return nameTable[tblIdx].u.raddr; }
