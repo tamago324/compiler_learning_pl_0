@@ -10,6 +10,11 @@ typedef enum codes {
     jmp
 } OpCode;
 
+/* 演算命令の演算部のコード */
+typedef enum ops {
+    add
+} Operator;
+
 int nextCode();
 
 /* 命令形式1
@@ -22,6 +27,9 @@ int genCodeT(OpCode op, int tblIdx);
     value: 値部 (実際の数値 or ジャンプ先の番地)
 */
 int genCodeV(OpCode op, int value);
+
+/* p: 演算命令 */
+int genCodeO(Operator p);
 
 /* 戻り命令 */
 int genCodeR();

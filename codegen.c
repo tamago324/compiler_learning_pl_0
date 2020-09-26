@@ -24,7 +24,7 @@ typedef struct inst {
     union {
         RelAddr addr;
         int value;
-        /* Operator oppr; */
+        Operator oppr;
     } u;
 } Inst;
 
@@ -56,6 +56,14 @@ int genCodeT(OpCode op, int tblIdx) {
     checkMax();
     code[cIndex].opCode = op;
     code[cIndex].u.addr = relAddr(tblIdx);
+    return cIndex;
+}
+
+/* 機能部、演算部 の2つからなる命令語を生成 */
+int genCodeO(Operator p){
+    checkMax();
+    code[cIndex].opCode = opr;
+    code[cIndex].u.oppr = p;
     return cIndex;
 }
 
@@ -101,6 +109,10 @@ void printCode(int i) {
         printf("ret");
         flag = 2;
         break;
+    case opr:
+        printf("opr");
+        flag = 3;
+        break;
     case ict:
         printf("ict");
         flag = 1;
@@ -126,7 +138,12 @@ void printCode(int i) {
         printf(",%d", code[i].u.addr.level);
         printf(",%d\n", code[i].u.addr.addr);
         return;
-    default:
+    case 3:
+        switch (code[i].u.oppr) {
+        case add:
+            printf(",add\n");
+            break;
+        }
         return;
     }
 }
@@ -196,6 +213,16 @@ void execute() {
             // ジャンプ先に制御を移す
             pc = i.u.value;
             break;
+        case opr:
+            switch (i.u.oppr) {
+            case add:
+                // top 実際に値が入っている番地より1つ先を指しているため1引く
+                --top;
+                stack[top - 1] += stack[top];
+                // XXX: continue にする理由がわからない...
+                /* continue; */
+                break;
+            }
         default:
             break;
         }

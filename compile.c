@@ -435,6 +435,7 @@ void condition() {
     expression -> ( + | - | e ) <term> { ( + | - ) <term> }
 */
 void expression() {
+    KeyId kind;
     // ( + | - | e ) <term>
     if (token.kind == Plus || token.kind == Minus) {
         token = nextToken();
@@ -445,9 +446,14 @@ void expression() {
 
     // { ( + | - ) <term> }
     while (token.kind == Plus || token.kind == Minus) {
+        kind = token.kind;
         // まずは読みすすめる
         token = nextToken();
         term();
+        // 目的コードの生成
+        if (kind == Plus) {
+            genCodeO(add);
+        }
     }
 }
 
