@@ -468,6 +468,8 @@ void factor() {
 
     if (token.kind == Num) {
         /* number */
+        // lit, 値 のコードを生成
+        genCodeV(lit, token.u.value);
         token = nextToken();
     } else if (token.kind == Lparen) {
         /* '(' <expression> ')' */

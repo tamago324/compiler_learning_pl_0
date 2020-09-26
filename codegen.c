@@ -39,6 +39,14 @@ static int cIndex = -1;
 
 int nextCode() { return cIndex + 1; }
 
+/* 機能部、値部 の２つからなる命令語を生成 (値をセット) */
+int genCodeV(OpCode op, int value) {
+    checkMax();
+    code[cIndex].opCode = op;
+    code[cIndex].u.value = value;
+    return cIndex;
+}
+
 /* 機能部、レベル部、オフセット の３つからなる命令語を生成 */
 int genCodeT(OpCode op, int tblIdx) {
     checkMax();
@@ -60,6 +68,10 @@ void printCode(int i) {
     // 命令語の種類を表す
     int flag;
     switch (code[i].opCode) {
+    case lit:
+        printf("lit");
+        flag = 1;
+        break;
     case sto:
         printf("sto");
         flag = 2;
@@ -70,6 +82,11 @@ void printCode(int i) {
     }
 
     switch (flag) {
+    case 1:
+        // 命令形式2 (機能部、値部)
+        //   -> , 値部 を表示
+        printf(",%d\n", code[i].u.value);
+        return;
     case 2:
         // 命令形式1 (機能部, レベル, オフセット の３つ)
         //   -> , レベル, レベル内でのオフセット の2つを表示
@@ -90,7 +107,7 @@ void checkMax() {
 }
 
 void execute() {
-    // 実行時スタック (論理的には各ブロックごとに区切られている)
+    // 実行時スタック (論理的には各ブロックごとに区切られていると考えられる)
     int stack[MAXMEM];
     // 現在見える、各レベルの先頭番地のディスプレイ
     int display[MAXLEVEL];
@@ -117,6 +134,11 @@ void execute() {
     do {
         i = code[pc++];
         switch (i.opCode) {
+        case lit:
+            // lit, value
+            // スタックの先頭に積む
+            stack[top++] = i.u.value;
+            break;
         case sto:
             // sto, level, addr
             // 変数の場所に、スタックの先頭のデータを格納する
