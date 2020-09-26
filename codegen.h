@@ -17,3 +17,4 @@ int genCodeT(OpCode op, int tblIdx);
 
 /* 目的コードの表示 */
 void listCode();
+void execute();

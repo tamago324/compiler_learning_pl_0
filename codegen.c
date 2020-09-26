@@ -1,5 +1,6 @@
 #include "codegen.h"
 #include "getSource.h"
+#include <stdio.h>
 
 #ifndef TBL
 #define TBL
@@ -8,6 +9,10 @@
 
 /* 目的コードの最大の数 */
 #define MAXCODE 200
+/* 実行時スタックの長さ */
+#define MAXMEM 2000
+/* ブロックの最大の深さ */
+#define MAXLEVEL 5
 
 /* 命令語の情報 */
 typedef struct inst {
@@ -82,4 +87,43 @@ void checkMax() {
         return;
     }
     errorF("too many code");
+}
+
+void execute() {
+    // 実行時スタック (論理的には各ブロックごとに区切られている)
+    int stack[MAXMEM];
+    // 現在見える、各レベルの先頭番地のディスプレイ
+    int display[MAXLEVEL];
+    int pc, top;
+    // 実行する命令語
+    Inst i;
+
+    printf("start execution\n");
+
+    // 次にスタックに入れる場所 (スタックの先頭を指す)
+    top = 0;
+    // 命令語のカウンタ Program Counter
+    pc = 0;
+
+    // stack[top] はレベルi の前のディスプレイの退避場所
+    stack[0] = 0;
+    // stack[top+1] は戻り番地
+    //  call の次の番地 => 手続きから呼び出し元に戻るときに使う
+    stack[1] = 0;
+
+    // 主ブロックの先頭番地は 0 
+    display[0] = 0;
+
+    do {
+        i = code[pc++];
+        switch (i.opCode) {
+        case sto:
+            // sto, level, addr
+            // 変数の場所に、スタックの先頭のデータを格納する
+            stack[display[i.u.addr.level] + i.u.addr.addr] = stack[--top];
+            break;
+        default:
+            break;
+        }
+    } while (pc != 0);
 }
