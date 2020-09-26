@@ -504,11 +504,14 @@ void factor() {
         /* 変数名 or パラメータ名 */
         case varId:
         case parId:
+            // レベル、オフセットからをもとに、スタックから変数の値を読み込み、スタックに積む
+            genCodeT(lod, tIndex);
             token = nextToken();
             break;
 
         /* 定数 */
         case constId:
+            /* XXX: genCodeT(lod, tIndex) ではない */
             token = nextToken();
             break;
 

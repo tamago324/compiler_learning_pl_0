@@ -105,6 +105,10 @@ void printCode(int i) {
         printf("sto");
         flag = 2;
         break;
+    case lod:
+        printf("lod");
+        flag = 2;
+        break;
     case ret:
         printf("ret");
         flag = 2;
@@ -194,6 +198,11 @@ void execute() {
             // 変数の場所に、スタックの先頭のデータを格納する
             stack[display[i.u.addr.level] + i.u.addr.addr] = stack[--top];
             break;
+        case lod:
+            // 変数の値を取得し、格納する
+            // フレーム内でのオフセットで取得できる
+            stack[top++] = stack[display[i.u.addr.level] + i.u.addr.addr];
+            break;
         case ret:
             // TODO: 関数呼び出しを実装するときに、display
             // の内容の回復を実装する 先頭番地の取得
@@ -223,8 +232,6 @@ void execute() {
                 /* continue; */
                 break;
             }
-        default:
-            break;
         }
     } while (pc != 0);
 }
