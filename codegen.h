@@ -5,6 +5,7 @@ typedef enum codes {
     opr,
     lod,
     sto,
+    ret,
     ict,
     jmp
 } OpCode;
@@ -21,6 +22,9 @@ int genCodeT(OpCode op, int tblIdx);
     value: 値部 (実際の数値 or ジャンプ先の番地)
 */
 int genCodeV(OpCode op, int value);
+
+/* 戻り命令 */
+int genCodeR();
 
 /* i のコードのジャンプ先を現在の cIndex でバックパッチングする */
 void backPatch(int i);

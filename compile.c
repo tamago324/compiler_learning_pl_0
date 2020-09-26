@@ -91,6 +91,8 @@ void block(int pIndex) {
     genCodeV(ict, frameL());
 
     statement();
+    // return 命令
+    genCodeR();
     blockEnd();
 }
 

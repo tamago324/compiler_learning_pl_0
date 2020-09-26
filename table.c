@@ -97,6 +97,16 @@ void blockEnd() {
     localAddr = addr[level];
 }
 
+/* 現在のレベルを返す */
+int bLevel(){
+    return level;
+}
+
+/* int fPars() { */
+/*     // TODO: なぜ、level-1？ */
+/*     return nameTable[index[level - 1]].u.f.pars; */
+/* } */
+
 /* 名前表に名前を登録 */
 void enterT(char *id) {
     // 1から入れていく (0 は番兵として使うため)

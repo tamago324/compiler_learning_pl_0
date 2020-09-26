@@ -59,6 +59,18 @@ int genCodeT(OpCode op, int tblIdx) {
     return cIndex;
 }
 
+int genCodeR() {
+
+    checkMax();
+    code[cIndex].opCode = ret;
+    code[cIndex].u.addr.level = bLevel();
+    // TODO: 理解する
+    /* code[cIndex].u.addr.addr = fPars(); */
+    // 今は、関数呼び出しを考えないため、0にする
+    code[cIndex].u.addr.addr = 0;
+    return cIndex;
+}
+
 void backPatch(int i) {
     // jmp, X   の X の部分をバックパッチング
     code[i].u.value = cIndex + 1;
@@ -83,6 +95,10 @@ void printCode(int i) {
         break;
     case sto:
         printf("sto");
+        flag = 2;
+        break;
+    case ret:
+        printf("ret");
         flag = 2;
         break;
     case ict:
@@ -160,6 +176,13 @@ void execute() {
             // sto, level, addr
             // 変数の場所に、スタックの先頭のデータを格納する
             stack[display[i.u.addr.level] + i.u.addr.addr] = stack[--top];
+            break;
+        case ret:
+            // TODO: 関数呼び出しを実装するときに、display の内容の回復を実装する
+            // 先頭番地の取得
+            top = display[i.u.addr.level];
+            // 処理を戻り番地に移す (各フレームの2番目に戻り番地が入っている)
+            pc = stack[top + 1];
             break;
         case ict:
             top += i.u.value;

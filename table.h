@@ -24,6 +24,11 @@ void blockBegin(int firstAddr);
 /* ブロックの終わりで呼び出される */
 void blockEnd();
 
+/* 現在のレベルを返す */
+int bLevel();
+// /* 現在の関数の引数の数を返す */
+// int fPars();
+
 /* 関数を追加 */
 int enterTfunc(char *id, int v);
 /* 定数を追加 */
