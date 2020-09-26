@@ -59,6 +59,11 @@ int genCodeT(OpCode op, int tblIdx) {
     return cIndex;
 }
 
+void backPatch(int i) {
+    // jmp, X   の X の部分をバックパッチング
+    code[i].u.value = cIndex + 1;
+}
+
 /* 目的コードの表示 */
 void listCode() {
     printf("\ncode\n");
@@ -82,6 +87,10 @@ void printCode(int i) {
         break;
     case ict:
         printf("ict");
+        flag = 1;
+        break;
+    case jmp:
+        printf("jmp");
         flag = 1;
         break;
     default:
@@ -159,6 +168,10 @@ void execute() {
                 // XXX: MAXREG ってなに...？
                 errorF("stack overflow");
             }
+            break;
+        case jmp:
+            // ジャンプ先に制御を移す
+            pc = i.u.value;
             break;
         default:
             break;

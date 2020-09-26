@@ -22,6 +22,9 @@ int genCodeT(OpCode op, int tblIdx);
 */
 int genCodeV(OpCode op, int value);
 
+/* i のコードのジャンプ先を現在の cIndex でバックパッチングする */
+void backPatch(int i);
+
 /* 目的コードの表示 */
 void listCode();
 void execute();

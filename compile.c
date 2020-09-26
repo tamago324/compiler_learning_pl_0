@@ -54,6 +54,9 @@ int compile() {
 
 void block(int pIndex) {
     /* block -> { ( constDecl | varDecl | funcDecl ) } statement */
+    int backP;
+    // ジャンプ先は後で埋める (バックパッチング)
+    backP = genCodeV(jmp, 0);
     while (1) {
         switch (token.kind) {
 
@@ -80,6 +83,7 @@ void block(int pIndex) {
 
         break;
     }
+    backPatch(backP);
     /* changeV(pIndex, nextCode()); */
 
     // 変数宣言などをしていた場合、実行時に必要な領域分だけ、
