@@ -1,7 +1,7 @@
 # vim: set fenc=utf-8 ft=dosini:
 
 # define a new task named "file-build"
-[file-build]
+[project-build]
 
 # shell command, use quotation for filenames containing spaces
 # check ":AsyncTaskMacro" to see available macros
