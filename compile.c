@@ -465,11 +465,19 @@ void expression() {
     term -> <factor> { ( * | / ) <factor> }
 */
 void term() {
+    KeyId k;
+
     factor();
 
     while (token.kind == Mult || token.kind == Div) {
+        k = token.kind;
         token = nextToken();
         factor();
+        if (k == Mult) {
+            genCodeO(mul);
+        } else {
+            genCodeO(div);
+        }
     }
 }
 

@@ -14,6 +14,8 @@ typedef enum codes {
 typedef enum ops {
     add,
     sub,
+    mul,
+    div,
     wrt,
     wrl,
 } Operator;

@@ -150,6 +150,12 @@ void printCode(int i) {
         case sub:
             printf(",sub\n");
             break;
+        case mul:
+            printf(",mul\n");
+            break;
+        case div:
+            printf(",div\n");
+            break;
         case wrt:
             printf(",wrt\n");
             break;
@@ -243,6 +249,14 @@ void execute() {
             case sub:
                 --top;
                 stack[top - 1] -= stack[top];
+                break;
+            case mul:
+                --top;
+                stack[top - 1] *= stack[top];
+                break;
+            case div:
+                --top;
+                stack[top - 1] /= stack[top];
                 break;
             case wrt:
                 // スタックの先頭を pop して表示する
