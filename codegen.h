@@ -13,6 +13,7 @@ typedef enum codes {
 /* 演算命令の演算部のコード */
 typedef enum ops {
     add,
+    sub,
     wrt,
     wrl,
 } Operator;

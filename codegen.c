@@ -147,6 +147,9 @@ void printCode(int i) {
         case add:
             printf(",add\n");
             break;
+        case sub:
+            printf(",sub\n");
+            break;
         case wrt:
             printf(",wrt\n");
             break;
@@ -236,6 +239,10 @@ void execute() {
                 stack[top - 1] += stack[top];
                 // XXX: continue にする理由がわからない...
                 /* continue; */
+                break;
+            case sub:
+                --top;
+                stack[top - 1] -= stack[top];
                 break;
             case wrt:
                 // スタックの先頭を pop して表示する

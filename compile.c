@@ -455,6 +455,8 @@ void expression() {
         // 目的コードの生成
         if (kind == Plus) {
             genCodeO(add);
+        } else {
+            genCodeO(sub);
         }
     }
 }
