@@ -353,10 +353,12 @@ void statement() {
         case Write: /* write <expression> */
             token = nextToken();
             expression();
+            genCodeO(wrt);
             return;
 
         case WriteLn: /* writeln */
             token = nextToken();
+            genCodeO(wrl);
             return;
 
         case End:
