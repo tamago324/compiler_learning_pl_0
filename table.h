@@ -56,5 +56,7 @@ int pars(int ti);
 /* 名前表[tblIdx] のアドレス情報 */
 RelAddr relAddr(int tblIdx);
 
+/* 名前表[ti] の値 (value) を返す */
+int val(int ti);
 /* そのレベルで実行時に必要な領域の数 */
 int frameL();

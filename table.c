@@ -219,5 +219,6 @@ int pars(int ti) { return nameTable[ti].u.f.pars; }
 /* 名前表[ti] のアドレス情報 */
 RelAddr relAddr(int tblIdx) { return nameTable[tblIdx].u.raddr; }
 
+int val(int ti) { return nameTable[ti].u.value; }
 /* そのレベルで実行時に必要な領域の数 */
 int frameL() { return localAddr; }

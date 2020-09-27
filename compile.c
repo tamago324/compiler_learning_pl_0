@@ -513,7 +513,8 @@ void factor() {
 
         /* 定数 */
         case constId:
-            /* XXX: genCodeT(lod, tIndex) ではない */
+            /* 定数なら、名前表から値を取得し、リテラルとしてコードを生成する */
+            genCodeV(lit, val(tIndex));
             token = nextToken();
             break;
 
