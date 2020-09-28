@@ -169,6 +169,21 @@ void printCode(int i) {
         case eq:
             printf(",eq\n");
             break;
+        case ls:
+            printf(",ls\n");
+            break;
+        case gr:
+            printf(",gr\n");
+            break;
+        case neq:
+            printf(",neq\n");
+            break;
+        case lseq:
+            printf(",lseq\n");
+            break;
+        case greq:
+            printf(",greq\n");
+            break;
         }
         return;
     }
@@ -287,6 +302,26 @@ void execute() {
             case eq:
                 --top;
                 stack[top-1] = (stack[top-1] == stack[top]);
+                break;
+            case ls:
+                --top;
+                stack[top-1] = (stack[top-1] < stack[top]);
+                break;
+            case gr:
+                --top;
+                stack[top-1] = (stack[top-1] > stack[top]);
+                break;
+            case neq:
+                --top;
+                stack[top-1] = (stack[top-1] != stack[top]);
+                break;
+            case lseq:
+                --top;
+                stack[top-1] = (stack[top-1] >= stack[top]);
+                break;
+            case greq:
+                --top;
+                stack[top-1] = (stack[top-1] <= stack[top]);
                 break;
             }
         }

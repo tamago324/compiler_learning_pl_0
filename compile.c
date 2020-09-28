@@ -445,6 +445,21 @@ void condition() {
         case Equal: // =
             genCodeO(eq);
             break;
+        case NotEq: // <>
+            genCodeO(neq);
+            break;
+        case Gtr:   // <
+            genCodeO(gr);
+            break;
+        case Lss:   // >
+            genCodeO(ls);
+            break;
+        case GtrEq: // <=
+            genCodeO(greq);
+            break;
+        case LssEq: // >=
+            genCodeO(lseq);
+            break;
         default:
             // error ??
             break;

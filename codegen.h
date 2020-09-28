@@ -1,15 +1,6 @@
 
 /* 命令語のコード */
-typedef enum codes {
-    lit,
-    opr,
-    lod,
-    sto,
-    ret,
-    ict,
-    jmp,
-    jpc
-} OpCode;
+typedef enum codes { lit, opr, lod, sto, ret, ict, jmp, jpc } OpCode;
 
 /* 演算命令の演算部のコード */
 typedef enum ops {
@@ -20,7 +11,12 @@ typedef enum ops {
     div,
     wrt,
     wrl,
-    eq   // =
+    eq,   // =
+    ls,   // <
+    gr,   // >
+    neq,  // <>
+    lseq, // <=
+    greq, // >=
 } Operator;
 
 int nextCode();
