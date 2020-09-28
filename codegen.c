@@ -317,11 +317,11 @@ void execute() {
                 break;
             case lseq:
                 --top;
-                stack[top-1] = (stack[top-1] >= stack[top]);
+                stack[top-1] = (stack[top-1] <= stack[top]);
                 break;
             case greq:
                 --top;
-                stack[top-1] = (stack[top-1] <= stack[top]);
+                stack[top-1] = (stack[top-1] >= stack[top]);
                 break;
             }
         }
