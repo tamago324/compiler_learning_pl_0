@@ -166,6 +166,9 @@ void printCode(int i) {
         case wrl:
             printf(",wrl\n");
             break;
+        case eq:
+            printf(",eq\n");
+            break;
         }
         return;
     }
@@ -280,6 +283,10 @@ void execute() {
                 break;
             case wrl:
                 printf("\n");
+                break;
+            case eq:
+                --top;
+                stack[top-1] = (stack[top-1] == stack[top]);
                 break;
             }
         }

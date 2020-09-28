@@ -410,6 +410,8 @@ int isStBeginKey(Token t) {
                | <expression> ( = | <> | > | < | <= | >= ) <expression>
 */
 void condition() {
+    KeyId k;
+
     if (token.kind == Odd) {
         token = nextToken();
         expression();
@@ -418,6 +420,7 @@ void condition() {
 
         expression();
 
+        k = token.kind;
         // ( = | <> | > | < | <= | >= ) の部分
         switch (token.kind) {
         /* 演算子 */
@@ -436,6 +439,16 @@ void condition() {
 
         token = nextToken();
         expression();
+
+        switch (k) {
+        /* 演算子 */
+        case Equal: // =
+            genCodeO(eq);
+            break;
+        default:
+            // error ??
+            break;
+        }
     }
 }
 

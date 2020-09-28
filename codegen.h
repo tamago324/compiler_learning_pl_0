@@ -20,6 +20,7 @@ typedef enum ops {
     div,
     wrt,
     wrl,
+    eq   // =
 } Operator;
 
 int nextCode();
