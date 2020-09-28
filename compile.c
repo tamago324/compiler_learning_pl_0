@@ -268,6 +268,7 @@ void statement() {
     int tIndex;
     KindT k;
     int backP;
+    int backPloop;
 
     // うまいこと、break; をしないで活用する
 
@@ -350,10 +351,18 @@ void statement() {
 
         case While: /* while <condition> do <statement> */
             token = nextToken();
+            // 条件式の番地を取得 (ループのときに使う)
+            backPloop = nextCode();
             condition();
             // Do のはず
             token = checkGet(token, Do);
+            // 後でバックパッチングする (ループから抜けるときのジャンプ)
+            backP = genCodeV(jpc, 0);
             statement();
+            // 条件式の番地にジャンプ (ループ)
+            genCodeV(jmp, backPloop);
+            // ループから抜けるときの番地をバックパッチング
+            backPatch(backP);
             return;
 
         case Write: /* write <expression> */
