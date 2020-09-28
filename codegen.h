@@ -7,7 +7,8 @@ typedef enum codes {
     sto,
     ret,
     ict,
-    jmp
+    jmp,
+    jpc
 } OpCode;
 
 /* 演算命令の演算部のコード */

@@ -267,6 +267,7 @@ void statement() {
 
     int tIndex;
     KindT k;
+    int backP;
 
     // うまいこと、break; をしないで活用する
 
@@ -294,9 +295,14 @@ void statement() {
         case If: /* if <condition> then <statement> */
             token = nextToken();
             condition();
+            // condiiton の結果がスタックの先頭にあるはずだから、
+            //  その結果によって、ジャンプする
+            //   また、後でバックパッチングする
+            backP = genCodeV(jpc, 0);
             // then のはず
             token = checkGet(token, Then);
             statement();
+            backPatch(backP);
             return;
 
         case Ret: /* return <expression> */

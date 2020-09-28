@@ -125,7 +125,8 @@ void printCode(int i) {
         printf("jmp");
         flag = 1;
         break;
-    default:
+    case jpc:
+        printf("jpc");
         flag = 1;
         break;
     }
@@ -240,6 +241,13 @@ void execute() {
             // ジャンプ先に制御を移す
             pc = i.u.value;
             break;
+        case jpc:
+            // スタックの先頭が false (0) なら、ジャンプ先に制御を移す
+            --top;
+            if (stack[top] == 0) {
+                pc = i.u.value;
+            }
+            break;
         case opr:
             switch (i.u.oppr) {
             case odd:
@@ -268,7 +276,7 @@ void execute() {
                 break;
             case wrt:
                 // スタックの先頭を pop して表示する
-                printf("%d", stack[--top]);
+                printf("%d ", stack[--top]);
                 break;
             case wrl:
                 printf("\n");
