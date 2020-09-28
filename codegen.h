@@ -12,6 +12,7 @@ typedef enum codes {
 
 /* 演算命令の演算部のコード */
 typedef enum ops {
+    odd,
     add,
     sub,
     mul,

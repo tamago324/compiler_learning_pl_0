@@ -407,6 +407,7 @@ void condition() {
     if (token.kind == Odd) {
         token = nextToken();
         expression();
+        genCodeO(odd);
     } else {
 
         expression();

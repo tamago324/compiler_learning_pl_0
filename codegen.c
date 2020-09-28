@@ -144,6 +144,9 @@ void printCode(int i) {
         return;
     case 3:
         switch (code[i].u.oppr) {
+        case odd:
+            printf(",odd\n");
+            break;
         case add:
             printf(",add\n");
             break;
@@ -239,6 +242,11 @@ void execute() {
             break;
         case opr:
             switch (i.u.oppr) {
+            case odd:
+                // and 演算を行う
+                // また、top は動かさない
+                stack[top-1] = stack[top-1] & 1;
+                break;
             case add:
                 // top 実際に値が入っている番地より1つ先を指しているため1引く
                 --top;
