@@ -31,7 +31,7 @@ typedef struct {
 
         // 関数の場合
         struct {
-            /* RelAddr raddr; // 先頭アドレス */
+            RelAddr raddr; // 関数の本体の処理の先頭アドレス
             int pars; // パラメータの数
         } f;
     } u;
@@ -92,7 +92,7 @@ void blockBegin(int firstAddr) {
 void blockEnd() {
     // １つ外のブロックの情報を復元する
     level--;
-    // 名前表のインデックス
+    // 名前表のインデックスを回復
     tIndex = index[level];
     localAddr = addr[level];
 }
@@ -119,12 +119,13 @@ void enterT(char *id) {
 int enterTfunc(char *id, int v) {
     enterT(id);
     nameTable[tIndex].kind = funcId;
-    /* nameTable[tIndex].u.raddr.level = level; */
-    /* // 関数の先頭の番地 */
-    /* nameTable[tIndex].u.f.raddr.addr = v; */
+    // 関数名は、現在のレベルにとして登録
+    nameTable[tIndex].u.raddr.level = level;
+    // 関数の先頭番地を設定
+    nameTable[tIndex].u.raddr.addr = v;
     // パラメータ数の初期値
     nameTable[tIndex].u.f.pars = 0;
-    // パラメータの管理に使うため、保持
+    // TODO: パラメータの管理に使うため、保持
     tfIndex = tIndex;
     return tIndex;
 }
@@ -165,22 +166,23 @@ int enterTconst(char *id, int v) {
     return tIndex;
 }
 
-void endpar() {
-    // パラメータ数
-    int pars = nameTable[tfIndex].u.f.pars;
-    if (pars == 0) {
-        return;
-    }
-    /* // パラメータのアドレスの設定 */
-    /* for (int i = 1; i <= pars; i++) { */
-    /*     nameTable[tfIndex + i].u.raddr.addr = i - 1 - pars; */
-    /* } */
-}
-
-/* #<{(| 名前表[ti] の値の変更 (関数の先頭の番地を変更) |)}># */
-/* void changeV(int ti, int newVal) { */
-/*     nameTable[ti].u.f.raddr.addr = newVal; */
+// TODO: パラメータ付き関数を実装するときに考える
+/* void endpar() { */
+/*     // パラメータ数 */
+/*     int pars = nameTable[tfIndex].u.f.pars; */
+/*     if (pars == 0) { */
+/*         return; */
+/*     } */
+/*     #<{(| // パラメータのアドレスの設定 |)}># */
+/*     #<{(| for (int i = 1; i <= pars; i++) { |)}># */
+/*     #<{(|     nameTable[tfIndex + i].u.raddr.addr = i - 1 - pars; |)}># */
+/*     #<{(| } |)}># */
 /* } */
+
+/* 名前表[tblIdx] の値の変更 (関数本体の先頭の番地の変更) */
+void changeV(int tblIdx, int newVal) {
+    nameTable[tblIdx].u.f.raddr.addr = newVal;
+}
 
 /* 名前id を探す */
 int searchT(char *id, KindT k) {

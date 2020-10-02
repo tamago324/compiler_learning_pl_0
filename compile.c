@@ -54,10 +54,20 @@ int compile() {
     return errN < MINERROR;
 }
 
+/* pIndex は関数名のインデックス
+    XXX: 関数名なのかー。いまいちわかっていない
+*/
 void block(int pIndex) {
     /* block -> { ( constDecl | varDecl | funcDecl ) } statement */
+
     int backP;
+    // 内部関数 (クロージャ) を読み飛ばすためのジャンプ
     // ジャンプ先は後で埋める (バックパッチング)
+    // XXX: なぜ、ジャンプする？
+    //      内部関数を解析すると、目的コードが生成される
+    //      ジャンプせずに、実行してしまうと、関数を実行することになる
+    //      そのため、ジャンプする
+    //          逆に、この内部関数の先頭番地にジャンプすれば、関数を実行できる
     backP = genCodeV(jmp, 0);
     while (1) {
         switch (token.kind) {
@@ -86,7 +96,8 @@ void block(int pIndex) {
         break;
     }
     backPatch(backP);
-    /* changeV(pIndex, nextCode()); */
+    // いろんな宣言のあとに関数の本体の処理がくるため、
+    changeV(pIndex, nextCode());
 
     // 変数宣言などをしていた場合、実行時に必要な領域分だけ、
     // トップを増加させる必要がある
@@ -205,6 +216,7 @@ void funcDecl() {
     } else {
         setIdKind(funcId);
 
+        // 関数の先頭番地を仮引数のリストの場所からにする
         fIndex = enterTfunc(token.u.id, nextCode());
 
         // ( が来るはず
@@ -213,36 +225,39 @@ void funcDecl() {
         //  -> そのブロック内で宣言された局所変数と同じってこと！！
         blockBegin(FIRSTADDR);
 
-        while (1) {
-            if (token.kind == Id) {
-                /* 仮引数の識別子 */
-                setIdKind(parId);
-                // パラメータ名を名前表に追加
-                enterTpar(token.u.id);
-                token = nextToken();
-            } else {
-                /* 仮引数なし */
-                break;
-            }
+        // TODO: パラメータ付き関数を実装するときに考える
+        /* while (1) { */
+        /*     if (token.kind == Id) { */
+        /*         #<{(| 仮引数の識別子 |)}># */
+        /*         setIdKind(parId); */
+        /*         // パラメータ名を名前表に追加 */
+        /*         enterTpar(token.u.id); */
+        /*         token = nextToken(); */
+        /*     } else { */
+        /*         #<{(| 仮引数なし |)}># */
+        /*         break; */
+        /*     } */
+        /*  */
+        /*     if (token.kind != Comma) { */
+        /*         if (token.kind == Id) { */
+        /*             // phrase level recovery */
+        /*             errorInsert(Comma); */
+        /*             continue; */
+        /*         } else { */
+        /*             // 複数の引数ではないため、終わり */
+        /*             // f1(a, b | ) のように , でもなく、Id でもないなら、終わり */
+        /*             break; */
+        /*         } */
+        /*     } */
+        /*  */
+        /*     token = nextToken(); */
+        /* } */
 
-            if (token.kind != Comma) {
-                if (token.kind == Id) {
-                    // phrase level recovery
-                    errorInsert(Comma);
-                    continue;
-                } else {
-                    // 複数の引数ではないため、終わり
-                    // f1(a, b | ) のように , でもなく、Id でもないなら、終わり
-                    break;
-                }
-            }
-
-            token = nextToken();
-        }
         // ) のはず
         token = checkGet(token, Rparen);
-        // パラメータの部分が終わったから、ブロックの終わり
-        endpar();
+        // TODO: パラメータ付き関数を実装するときに考える
+        /* // パラメータの部分が終わったから、ブロックの終わり */
+        /* endpar(); */
 
         if (token.kind == Semicolon) {
             // 誤り回復
@@ -254,6 +269,7 @@ void funcDecl() {
         }
 
         // ブロックのコンパイル
+        // 名前表の中での番地を渡す (いい感じに先頭番地を直してくれる)
         block(fIndex);
         // ; が来るはず
         token = checkGet(token, Semicolon);
@@ -309,6 +325,7 @@ void statement() {
         case Ret: /* return <expression> */
             token = nextToken();
             expression();
+            genCodeR();
             return;
 
         case Begin: /* begin <statement> { ; <statement> } end */
@@ -574,6 +591,7 @@ void factor() {
 
         /* 関数呼び出し */
         case funcId:
+            // ident '(' ')'
             token = nextToken();
 
             if (token.kind == Lparen) {
@@ -581,24 +599,27 @@ void factor() {
                 i = 0;
                 token = nextToken();
                 if (token.kind != Rparen) {
-                    // 引数ありの場合
-                    for (;;) {
-                        i++;
-                        expression();
-                        // もし、',' なら、実引数が続く
-                        if (token.kind == Comma) {
-                            token = nextToken();
-                            continue;
-                        }
-                        // ')' のはず
-                        // チェック & 誤り回復
-                        token = checkGet(token, Rparen);
-                        break;
-                    }
+                    // TODO: 引数ありの場合
+                    /* for (;;) { */
+                    /*     expression(); */
+                    /*     i++; */
+                    /*     // もし、',' なら、実引数が続く */
+                    /*     if (token.kind == Comma) { */
+                    /*         token = nextToken(); */
+                    /*         continue; */
+                    /*     } */
+                    /*     // ')' のはず */
+                    /*     // チェック & 誤り回復 */
+                    /*     token = checkGet(token, Rparen); */
+                    /*     break; */
+                    /* } */
                 } else {
                     // 引数なしの関数呼び出しってこと
                     token = nextToken();
                 }
+                // cal 命令
+                // tIndex は、名前表内での関数名の index
+                genCodeT(cal, tIndex);
 
                 // もし、関数定義のパラメータと合わなかった場合、エラー
                 if (pars(tIndex) != i) {

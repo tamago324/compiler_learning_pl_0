@@ -1,6 +1,6 @@
 
 /* 命令語のコード */
-typedef enum codes { lit, opr, lod, sto, ret, ict, jmp, jpc } OpCode;
+typedef enum codes { lit, opr, lod, sto, ret, ict, jmp, jpc, cal} OpCode;
 
 /* 演算命令の演算部のコード */
 typedef enum ops {

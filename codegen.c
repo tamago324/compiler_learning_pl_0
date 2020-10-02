@@ -69,12 +69,17 @@ int genCodeO(Operator p){
 
 int genCodeR() {
 
+    if (code[cIndex].opCode == ret) {
+        // 直前が return なら、生成しない
+        return cIndex;
+    }
     checkMax();
     code[cIndex].opCode = ret;
+    // 関数本体のレベル
     code[cIndex].u.addr.level = bLevel();
     // TODO: 理解する
     /* code[cIndex].u.addr.addr = fPars(); */
-    // 今は、関数呼び出しを考えないため、0にする
+    // 今は、関数に引数をつけないため、考えない
     code[cIndex].u.addr.addr = 0;
     return cIndex;
 }
@@ -128,6 +133,10 @@ void printCode(int i) {
     case jpc:
         printf("jpc");
         flag = 1;
+        break;
+    case cal:
+        printf("cal");
+        flag = 2;
         break;
     }
 
@@ -202,7 +211,7 @@ void execute() {
     int stack[MAXMEM];
     // 現在見える、各レベルの先頭番地のディスプレイ
     int display[MAXLEVEL];
-    int pc, top;
+    int pc, top, lev, temp;
     // 実行する命令語
     Inst i;
 
@@ -240,12 +249,30 @@ void execute() {
             // フレーム内でのオフセットで取得できる
             stack[top++] = stack[display[i.u.addr.level] + i.u.addr.addr];
             break;
+        case cal:
+            // i.u.addr.level は 呼び出される手続きの名前が宣言されているレベル
+            // 実際の手続きの処理は、名前のレベル +1 したレベルになる
+            lev = i.u.addr.level + 1;
+            // display の退避
+            stack[top] = display[lev];
+            // 戻り番地の設定
+            stack[top + 1] = pc;
+            // 現在の top を呼び出される側の手続きの先頭に設定
+            display[lev] = top;
+            pc = i.u.addr.addr;
+            break;
         case ret:
-            // TODO: 関数呼び出しを実装するときに、display
-            // の内容の回復を実装する 先頭番地の取得
+            // 呼び出し元に返す値をとっておく
+            temp = stack[--top];
+            // 呼び出されたときのディスプレイを回復
             top = display[i.u.addr.level];
+            display[i.u.addr.level] = stack[top];
             // 処理を戻り番地に移す (各フレームの2番目に戻り番地が入っている)
             pc = stack[top + 1];
+            // TODO: 理解する。実引数の文だけトップを戻す
+            /* top -= i.u.addr.addr; */
+            // 呼び出し元に返す値をトップに置く
+            stack[top++] = temp;
             break;
         case ict:
             top += i.u.value;
