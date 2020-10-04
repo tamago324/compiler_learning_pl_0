@@ -78,6 +78,7 @@ static struct keyWd KeyWdTbl[] = {
     {"begin", Begin},
     {"end", End},
     {"if", If},
+    {"else", Else},
     {"then", Then},
     {"while", While},
     {"do", Do},

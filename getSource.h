@@ -13,6 +13,7 @@ typedef enum {
     Begin,
     End,
     If,
+    Else,
     Then,
     While,
     Do,

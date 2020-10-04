@@ -286,7 +286,7 @@ void statement() {
     int tIndex;
     KindT k;
     int backP;
-    int backPloop;
+    int backP2;
 
     // うまいこと、break; をしないで活用する
 
@@ -311,17 +311,25 @@ void statement() {
             genCodeT(sto, tIndex);
             return;
 
-        case If: /* if <condition> then <statement> */
+        case If: /* if <condition> then <statement> ( e | else <statement> ) */
             token = nextToken();
             condition();
-            // condiiton の結果がスタックの先頭にあるはずだから、
-            //  その結果によって、ジャンプする
-            //   また、後でバックパッチングする
+            // false のとき、ジャンプする (後でバックパッチングする)
             backP = genCodeV(jpc, 0);
             // then のはず
             token = checkGet(token, Then);
             statement();
-            backPatch(backP);
+            if ((token = nextToken()).kind == Else) {
+                // else の場合
+                // true の時の分を実行し終わったらジャンプするための jmp
+                backP2 = genCodeV(jmp, 0);
+                // false のときにジャンプする先をバックパッチング
+                backPatch(backP);
+                statement();
+                backPatch(backP2);
+            } else {
+                backPatch(backP);
+            }
             return;
 
         case Ret: /* return <expression> */
@@ -371,7 +379,7 @@ void statement() {
         case While: /* while <condition> do <statement> */
             token = nextToken();
             // 条件式の番地を取得 (ループのときに使う)
-            backPloop = nextCode();
+            backP2 = nextCode();
             condition();
             // Do のはず
             token = checkGet(token, Do);
@@ -379,7 +387,7 @@ void statement() {
             backP = genCodeV(jpc, 0);
             statement();
             // 条件式の番地にジャンプ (ループ)
-            genCodeV(jmp, backPloop);
+            genCodeV(jmp, backP2);
             // ループから抜けるときの番地をバックパッチング
             backPatch(backP);
             return;
