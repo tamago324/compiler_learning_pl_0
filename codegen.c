@@ -270,7 +270,7 @@ void execute() {
             // 処理を戻り番地に移す (各フレームの2番目に戻り番地が入っている)
             pc = stack[top + 1];
             // TODO: 理解する。実引数の文だけトップを戻す
-            /* top -= i.u.addr.addr; */
+            top -= i.u.addr.addr;
             // 呼び出し元に返す値をトップに置く
             stack[top++] = temp;
             break;

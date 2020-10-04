@@ -9,8 +9,10 @@
 
 /* このエラー数以下なら、OK */
 #define MINERROR 3
-/* 各ブロックの最初の変数のアドレス
+/* 各ブロックの最初の変数のアドレス (各スタックフレームごとのアドレス)
     XXX: なせ、2？
+        -> 0 は前のディスプレイの退避場所
+        -> 1 は戻り番地 (手続き終了後に戻るときに使う)
 */
 #define FIRSTADDR 2
 
@@ -225,39 +227,39 @@ void funcDecl() {
         //  -> そのブロック内で宣言された局所変数と同じってこと！！
         blockBegin(FIRSTADDR);
 
-        // TODO: パラメータ付き関数を実装するときに考える
-        /* while (1) { */
-        /*     if (token.kind == Id) { */
-        /*         #<{(| 仮引数の識別子 |)}># */
-        /*         setIdKind(parId); */
-        /*         // パラメータ名を名前表に追加 */
-        /*         enterTpar(token.u.id); */
-        /*         token = nextToken(); */
-        /*     } else { */
-        /*         #<{(| 仮引数なし |)}># */
-        /*         break; */
-        /*     } */
-        /*  */
-        /*     if (token.kind != Comma) { */
-        /*         if (token.kind == Id) { */
-        /*             // phrase level recovery */
-        /*             errorInsert(Comma); */
-        /*             continue; */
-        /*         } else { */
-        /*             // 複数の引数ではないため、終わり */
-        /*             // f1(a, b | ) のように , でもなく、Id でもないなら、終わり */
-        /*             break; */
-        /*         } */
-        /*     } */
-        /*  */
-        /*     token = nextToken(); */
-        /* } */
+        /* パラメータ付き関数 */
+        while (1) {
+            if (token.kind == Id) {
+                /* 引数の識別子 */
+                setIdKind(parId);
+                // パラメータ名を名前表に追加
+                enterTpar(token.u.id);
+                token = nextToken();
+            } else {
+                /* 引数なし */
+                break;
+            }
+
+            if (token.kind != Comma) {
+                if (token.kind == Id) {
+                    // phrase level recovery
+                    errorInsert(Comma);
+                    continue;
+                } else {
+                    // 複数の引数ではないため、終わり
+                    // f1(a, b | ) のように , でもなく、Id でもないなら、終わり
+                    break;
+                }
+            }
+
+            token = nextToken();
+        }
 
         // ) のはず
         token = checkGet(token, Rparen);
         // TODO: パラメータ付き関数を実装するときに考える
-        /* // パラメータの部分が終わったから、ブロックの終わり */
-        /* endpar(); */
+        // パラメータの部分が終わったから、ブロックの終わり
+        endpar();
 
         if (token.kind == Semicolon) {
             // 誤り回復
@@ -599,20 +601,21 @@ void factor() {
                 i = 0;
                 token = nextToken();
                 if (token.kind != Rparen) {
-                    // TODO: 引数ありの場合
-                    /* for (;;) { */
-                    /*     expression(); */
-                    /*     i++; */
-                    /*     // もし、',' なら、実引数が続く */
-                    /*     if (token.kind == Comma) { */
-                    /*         token = nextToken(); */
-                    /*         continue; */
-                    /*     } */
-                    /*     // ')' のはず */
-                    /*     // チェック & 誤り回復 */
-                    /*     token = checkGet(token, Rparen); */
-                    /*     break; */
-                    /* } */
+                    // 引数ありの場合
+                    for (;;) {
+                        // 引数の目的コードを生成
+                        expression();
+                        i++;
+                        // もし、',' なら、実引数が続く
+                        if (token.kind == Comma) {
+                            token = nextToken();
+                            continue;
+                        }
+                        // ')' のはず
+                        // チェック & 誤り回復
+                        token = checkGet(token, Rparen);
+                        break;
+                    }
                 } else {
                     // 引数なしの関数呼び出しってこと
                     token = nextToken();

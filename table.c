@@ -57,7 +57,7 @@ static int addr[MAXLEVEL];
 static int localAddr;
 
 /* 関数のインデックス */
-static int tfIndex;
+static int tFuncIndex;
 
 /* ブロックの始まり */
 void blockBegin(int firstAddr) {
@@ -125,8 +125,8 @@ int enterTfunc(char *id, int v) {
     nameTable[tIndex].u.raddr.addr = v;
     // パラメータ数の初期値
     nameTable[tIndex].u.f.pars = 0;
-    // TODO: パラメータの管理に使うため、保持
-    tfIndex = tIndex;
+    // 関数のパラメータの管理に使うため、保持
+    tFuncIndex = tIndex;
     return tIndex;
 }
 
@@ -149,10 +149,10 @@ int enterTpar(char *id) {
     //  -> パラメータは、関数本体での局所変数と同じと考えられるってこと！
     enterT(id);
     nameTable[tIndex].kind = parId;
-    /* nameTable[tIndex].u.raddr.level = level; */
+    nameTable[tIndex].u.raddr.level = level;
     /* nameTable[tIndex].u.raddr.addr は 後で、まとめて設定する */
     // 関数のパラメータ数を加算
-    nameTable[tfIndex].u.f.pars++;
+    nameTable[tFuncIndex].u.f.pars++;
     return tIndex;
 }
 
@@ -166,18 +166,18 @@ int enterTconst(char *id, int v) {
     return tIndex;
 }
 
-// TODO: パラメータ付き関数を実装するときに考える
-/* void endpar() { */
-/*     // パラメータ数 */
-/*     int pars = nameTable[tfIndex].u.f.pars; */
-/*     if (pars == 0) { */
-/*         return; */
-/*     } */
-/*     #<{(| // パラメータのアドレスの設定 |)}># */
-/*     #<{(| for (int i = 1; i <= pars; i++) { |)}># */
-/*     #<{(|     nameTable[tfIndex + i].u.raddr.addr = i - 1 - pars; |)}># */
-/*     #<{(| } |)}># */
-/* } */
+/* 関数のパラメータ部分が終わった */ 
+void endpar() {
+    // パラメータ数は、enterTpar 内で加算されている
+    int pars = nameTable[tFuncIndex].u.f.pars;
+    if (pars == 0) {
+        return;
+    }
+    // パラメータのアドレスの設定
+    for (int i = 1; i <= pars; i++) {
+        nameTable[tFuncIndex + i].u.raddr.addr = i - 1 - pars;
+    }
+}
 
 /* 名前表[tblIdx] の値の変更 (関数本体の先頭の番地の変更) */
 void changeV(int tblIdx, int newVal) {
